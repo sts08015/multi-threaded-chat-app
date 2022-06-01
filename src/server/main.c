@@ -12,24 +12,50 @@ typedef struct thread_param
     struct sockaddr_in cs_addr;
 }TP;
 
+void broadcast(int fd,char* str,int len)
+{
+    pthread_mutex_lock(&mutex);
+    for(int i=0;i<CAPACITY;i++)
+    {
+        printf("%d ",scs[i]);
+        if(i==fd || scs[i]<0) continue;
+        send(scs[i],str,len,0);
+    }
+    pthread_mutex_unlock(&mutex);
+    printf("fd : %d\n",fd);
+}
+
 void thread_main(void* param)
 {
+    char nickname[BUFLEN] = {0};
     char buf[BUFLEN] = {0};
     TP* p = (TP*)param;
     conn_succ_server(&(p->cs_addr)); //print connection success string
-    recv(scs[p->idx],buf,BUFLEN,0);
-
-    pthread_mutex_lock(&mutex);
-    strcat(buf," is connected");
-    int len = strlen(buf);
-    for(int i=0;i<CAPACITY;i++)
-    {
-        if(i==p->idx) continue;
-        send(scs[i],buf,len,0);
-    }
-    puts(buf);
-    pthread_mutex_unlock(&mutex);
+    recv(scs[p->idx],nickname,BUFLEN,0); //receive nickname
     
+    snprintf(buf,BUFLEN,"%s is connected",nickname);
+    int len = strlen(buf);
+    broadcast(p->idx,buf,len);
+    puts(buf);
+    
+    uint8_t flag = 1;
+    while(1)
+    {
+        memset(buf,0,BUFLEN);
+        flag = recv_msg(scs[p->idx],buf,BUFLEN);
+        if(flag == 0)
+        {
+            snprintf(buf,BUFLEN,"%s is disconnected",nickname);
+        }
+        else
+        {
+            char* tmp = strdup(buf);
+            snprintf(buf,BUFLEN,"%s:%s",nickname,tmp);
+            free(tmp);
+        }
+        broadcast(p->idx,buf,strlen(buf));
+        puts(buf);
+    }
 }
 
 int main(int argc, char* argv[])
@@ -78,8 +104,9 @@ int main(int argc, char* argv[])
     {
         ret = accept(ss,(struct sockaddr*) &cs_addr,&cs_addr_len);  //accept connection
         if(ret<0 || cnt>=CAPACITY) continue;
+        
+        pthread_mutex_lock(&mutex);
         cnt++;
-
         for(int i=0;i<CAPACITY;i++)
         {
             if(scs[i]==-1)
@@ -89,6 +116,8 @@ int main(int argc, char* argv[])
                 break;
             }
         }
+        pthread_mutex_unlock(&mutex);
+
         tp.cs_addr = cs_addr;
         pthread_create(tid+tp.idx, NULL, (void*(*)(void*))thread_main, (void*)&tp);
     }

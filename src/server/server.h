@@ -4,7 +4,7 @@
 
 #define BACKLOG 5   //size of backlog used in listen function
 #define CAPACITY 5
-#define BUFLEN 100
+#define BUFLEN 222
 
 extern int ss;  //global variable assigned at main.c
 /*

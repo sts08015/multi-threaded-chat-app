@@ -70,7 +70,7 @@ void chat_client(char* nickname)
         flag = send_msg(cs,send_buf,sizeof(send_buf));
         if(flag == 0)
         {
-            printf("Disconnected\n");   //flag==0 means QUIT has transmitted
+            printf("%s is disconnected\n",nickname);   //flag==0 means QUIT has transmitted
             break;
         }
         memset(send_buf,0,MAX_BUF_LEN);

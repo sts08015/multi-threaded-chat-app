@@ -9,7 +9,6 @@ void handleErr(int fd,const char const * msg)
 int recv_msg(int fd, char* buf,int maxlen)
 {
     recv(fd,buf,maxlen,0);
-    fputs(buf,stdout);  //show received message
     int len = strlen(buf);
     buf[len-1] = 0; //delete newline character
     --len;
