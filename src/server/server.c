@@ -45,6 +45,7 @@ void broadcast(int idx,char* str,int len)
     for(int i=0;i<CAPACITY;i++)
     {
         if(i==idx || scs[i]<0) continue;
+        //puts("fuck");
         send(scs[i],str,len,0);
     }
     pthread_mutex_unlock(&mutex);
@@ -75,7 +76,7 @@ void thread_main(void* param)
         else
         {
             char* tmp = strdup(buf);
-            snprintf(buf,BUFLEN,"%s:%s",nickname,tmp);
+            snprintf(buf,BUFLEN,"%s: %s",nickname,tmp);
             free(tmp);
         }
         broadcast(p.idx,buf,strlen(buf));

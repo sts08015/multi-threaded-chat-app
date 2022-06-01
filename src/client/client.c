@@ -34,9 +34,9 @@ int init_socket(struct sockaddr_in *sockaddr,char* ip, char* port)
     return 0;
 }
 
-void conn_succ_client()
+void conn_succ_client(char* nickname)
 {
-    printf("Connected\n");  //client connection success message
+    printf("%s is connected\n",nickname);  //client connection success message
 }
 
 void recv_thread(void* param)
@@ -47,7 +47,9 @@ void recv_thread(void* param)
     char recv_buf[MAX_BUF_LEN] = {0};   //buffer used to receive message
     while(1)
     {
-        recv(cs,recv_buf,sizeof(recv_buf),0);
+        int ret = recv(cs,recv_buf,sizeof(recv_buf),0);
+        if(ret<0) continue;
+        //puts("hmm..?");
         puts(recv_buf);
         memset(recv_buf,0,MAX_BUF_LEN);
     }

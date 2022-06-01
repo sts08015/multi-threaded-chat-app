@@ -19,8 +19,10 @@ int init_socket(struct sockaddr_in *sockaddr,char* ip, char* port);
 /*
     function to print the connection success message of the client
 */
-void conn_succ_client();
+void conn_succ_client(char* str);
 /*
     function that implemented the chatting sequence of the client
 */
 void chat_client(char* str);
+
+void recv_thread(void* param);
