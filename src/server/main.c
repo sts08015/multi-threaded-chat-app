@@ -1,70 +1,10 @@
 #include "server.h"
 
 int ss; //socket file descriptor for server
-int scs[CAPACITY] = {-1,-1,-1,-1,-1};
+int *scs = NULL;
 int cnt;
 pthread_t tid[CAPACITY];
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-typedef struct thread_param
-{
-    int idx;
-    struct sockaddr_in cs_addr;
-}TP;
-
-void broadcast(int idx,char* str,int len)
-{
-    pthread_mutex_lock(&mutex);
-    for(int i=0;i<CAPACITY;i++)
-    {
-        //printf("%d ",scs[i]);
-        if(i==idx || scs[i]<0) continue;
-        send(scs[i],str,len,0);
-    }
-    pthread_mutex_unlock(&mutex);
-    //printf("idx : %d\n", idx);
-}
-
-void thread_main(void* param)
-{
-    char nickname[BUFLEN] = {0};
-    char buf[BUFLEN] = {0};
-    TP p = *(TP*)param;
-    conn_succ_server(&(p.cs_addr)); //print connection success string
-    recv(scs[p.idx],nickname,BUFLEN,0); //receive nickname
-    
-    snprintf(buf,BUFLEN,"%s is connected",nickname);
-    int len = strlen(buf);
-    broadcast(p.idx,buf,len);
-    puts(buf);
-    
-    uint8_t flag = 1;
-    while(1)
-    {
-        memset(buf,0,BUFLEN);
-        flag = recv_msg(scs[p.idx],buf,BUFLEN);
-        if(flag == 0)
-        {
-            snprintf(buf,BUFLEN,"%s is disconnected",nickname);
-        }
-        else
-        {
-            char* tmp = strdup(buf);
-            snprintf(buf,BUFLEN,"%s:%s",nickname,tmp);
-            free(tmp);
-        }
-        broadcast(p.idx,buf,strlen(buf));
-        puts(buf);
-        if(flag == 0)
-        {
-            pthread_mutex_lock(&mutex);
-            close(scs[p.idx]);
-            scs[p.idx] = -1;
-            pthread_mutex_unlock(&mutex);
-            break;
-        }
-    }
-}
 
 int main(int argc, char* argv[])
 {
@@ -73,9 +13,11 @@ int main(int argc, char* argv[])
         usage();    //check port has given as an argument
         return -1;
     }
-
+    
+    scs = (int*)malloc(sizeof(int)*CAPACITY);
     signal(SIGINT,sig_handle_s);    //assign SIGINT handler
-
+    memset(scs,-1,CAPACITY*sizeof(int));
+    
     ss = socket(PF_INET,SOCK_STREAM,IPPROTO_TCP);   //open welcome socket
     if(ss < 0)  //socket creation faliure
     {

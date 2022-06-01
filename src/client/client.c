@@ -4,6 +4,7 @@ void sig_handle_c(int signo)
 {
     if(signo == SIGINT) //handle SIGINT
     {
+        send(cs,"QUIT\n",5,0);
         close(cs);  //close open socket
         puts("");   //to maintain terminal allignment
         exit(1);    //terminate process

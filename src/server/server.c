@@ -5,7 +5,10 @@ void sig_handle_s(int signo)
     if(signo == SIGINT) //handle SIGINT
     {
         close(ss);  //close open socket
-        for(int i=0;i<5;i++) if(scs[i]!=-1) close(scs[i]);
+        pthread_mutex_lock(&mutex);
+        for(int i=0;i<CAPACITY;i++) if(scs[i]!=-1) close(scs[i]);
+        free(scs);
+        pthread_mutex_unlock(&mutex);
         puts("");   //to maintain terminal allignment
         exit(1);  //terminate process  
     }
@@ -36,30 +39,54 @@ void conn_succ_server(struct sockaddr_in* cs_addr)
     printf("Connection from %s:%hu\n",ip,port); //server connection success message
 }
 
-void chat_server(int cs)
+void broadcast(int idx,char* str,int len)
 {
-    uint8_t flag = 1;
-    char send_buf[MAX_BUF_LEN] = {0};
-    char recv_buf[MAX_BUF_LEN] = {0};
-    
-    while(flag)
+    pthread_mutex_lock(&mutex);
+    for(int i=0;i<CAPACITY;i++)
     {
-        flag = recv_msg(cs, recv_buf,sizeof(recv_buf)); //server receives the message first
+        if(i==idx || scs[i]<0) continue;
+        send(scs[i],str,len,0);
+    }
+    pthread_mutex_unlock(&mutex);
+}
+
+void thread_main(void* param)
+{
+    char nickname[BUFLEN] = {0};
+    char buf[BUFLEN] = {0};
+    TP p = *(TP*)param;
+    conn_succ_server(&(p.cs_addr)); //print connection success string
+    recv(scs[p.idx],nickname,BUFLEN,0); //receive nickname
+    
+    snprintf(buf,BUFLEN,"%s is connected",nickname);
+    int len = strlen(buf);
+    broadcast(p.idx,buf,len);
+    puts(buf);
+    
+    uint8_t flag = 1;
+    while(1)
+    {
+        memset(buf,0,BUFLEN);
+        flag = recv_msg(scs[p.idx],buf,BUFLEN);
         if(flag == 0)
         {
-            printf("Disconnected\n");   //flag==0 means QUIT has received
-            break;
+            snprintf(buf,BUFLEN,"%s is disconnected",nickname);
         }
-
-        flag = send_msg(cs,send_buf,sizeof(send_buf));  //client transmits the message after receiving is completed
+        else
+        {
+            char* tmp = strdup(buf);
+            snprintf(buf,BUFLEN,"%s:%s",nickname,tmp);
+            free(tmp);
+        }
+        broadcast(p.idx,buf,strlen(buf));
+        puts(buf);
         if(flag == 0)
         {
-            printf("Disconnected\n");   //flag==0 means QUIT has transmitted
+            pthread_mutex_lock(&mutex);
+            close(scs[p.idx]);
+            scs[p.idx] = -1;
+            pthread_mutex_unlock(&mutex);
             break;
         }
-
-        //initialize used buffer to prevent misusage of leftover information
-        memset(recv_buf,0,MAX_BUF_LEN);
-        memset(send_buf,0,MAX_BUF_LEN);
     }
 }
