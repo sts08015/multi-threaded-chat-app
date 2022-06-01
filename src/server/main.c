@@ -55,6 +55,13 @@ void thread_main(void* param)
         }
         broadcast(p->idx,buf,strlen(buf));
         puts(buf);
+        if(flag == 0)
+        {
+            pthread_mutex_lock(&mutex);
+            close(scs[p->idx]);
+            scs[p->idx] = -1;
+            pthread_mutex_unlock(&mutex);
+        }
     }
 }
 
