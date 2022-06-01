@@ -3,7 +3,6 @@
 
 extern int cs;  //global variable assigned at main.c
 extern pthread_mutex_t mutex;
-extern int chk;
 
 /*
     function to close open socket when SIGINT occurs

@@ -2,7 +2,6 @@
 
 int cs; //socket file descriptor for client
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-volatile int chk = 1;
 
 int main(int argc, char* argv[])
 {

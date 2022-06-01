@@ -38,17 +38,17 @@ void conn_succ_client()
     printf("Connected\n");  //client connection success message
 }
 
-
 void recv_thread(void* param)
 {
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
+
     char recv_buf[MAX_BUF_LEN] = {0};   //buffer used to receive message
     while(1)
     {
         recv(cs,recv_buf,sizeof(recv_buf),0);
         puts(recv_buf);
         memset(recv_buf,0,MAX_BUF_LEN);
-        
-        //condition variable???
     }
 }
 
@@ -75,5 +75,5 @@ void chat_client(char* nickname)
         }
         memset(send_buf,0,MAX_BUF_LEN);
     }
-
+    pthread_cancel(tid);
 }
