@@ -12,37 +12,37 @@ typedef struct thread_param
     struct sockaddr_in cs_addr;
 }TP;
 
-void broadcast(int fd,char* str,int len)
+void broadcast(int idx,char* str,int len)
 {
     pthread_mutex_lock(&mutex);
     for(int i=0;i<CAPACITY;i++)
     {
-        printf("%d ",scs[i]);
-        if(i==fd || scs[i]<0) continue;
+        //printf("%d ",scs[i]);
+        if(i==idx || scs[i]<0) continue;
         send(scs[i],str,len,0);
     }
     pthread_mutex_unlock(&mutex);
-    printf("fd : %d\n",fd);
+    //printf("idx : %d\n", idx);
 }
 
 void thread_main(void* param)
 {
     char nickname[BUFLEN] = {0};
     char buf[BUFLEN] = {0};
-    TP* p = (TP*)param;
-    conn_succ_server(&(p->cs_addr)); //print connection success string
-    recv(scs[p->idx],nickname,BUFLEN,0); //receive nickname
+    TP p = *(TP*)param;
+    conn_succ_server(&(p.cs_addr)); //print connection success string
+    recv(scs[p.idx],nickname,BUFLEN,0); //receive nickname
     
     snprintf(buf,BUFLEN,"%s is connected",nickname);
     int len = strlen(buf);
-    broadcast(p->idx,buf,len);
+    broadcast(p.idx,buf,len);
     puts(buf);
     
     uint8_t flag = 1;
     while(1)
     {
         memset(buf,0,BUFLEN);
-        flag = recv_msg(scs[p->idx],buf,BUFLEN);
+        flag = recv_msg(scs[p.idx],buf,BUFLEN);
         if(flag == 0)
         {
             snprintf(buf,BUFLEN,"%s is disconnected",nickname);
@@ -53,14 +53,15 @@ void thread_main(void* param)
             snprintf(buf,BUFLEN,"%s:%s",nickname,tmp);
             free(tmp);
         }
-        broadcast(p->idx,buf,strlen(buf));
+        broadcast(p.idx,buf,strlen(buf));
         puts(buf);
         if(flag == 0)
         {
             pthread_mutex_lock(&mutex);
-            close(scs[p->idx]);
-            scs[p->idx] = -1;
+            close(scs[p.idx]);
+            scs[p.idx] = -1;
             pthread_mutex_unlock(&mutex);
+            break;
         }
     }
 }
