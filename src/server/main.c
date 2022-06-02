@@ -52,8 +52,9 @@ int main(int argc, char* argv[])
     TP tp = {0};
     while(1)
     {
+        if(cnt>=CAPACITY) continue;
         ret = accept(ss,(struct sockaddr*) &cs_addr,&cs_addr_len);  //accept connection
-        if(ret<0 || cnt>=CAPACITY) continue;
+        if(ret<0) continue;
         
         pthread_mutex_lock(&mutex); //due to critical section
         cnt++;
