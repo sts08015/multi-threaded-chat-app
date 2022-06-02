@@ -1,10 +1,10 @@
 #include "server.h"
 
-int ss; //socket file descriptor for server
-int *scs = NULL;
-int cnt;
-pthread_t tid[CAPACITY];
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+int ss; //welcoming socket file descriptor for server
+int *scs = NULL;    //socket file descriptor array
+int cnt;    //total connected client num
+pthread_t tid[CAPACITY];    //tid array
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  //mutex used in server
 
 int main(int argc, char* argv[])
 {
