@@ -85,6 +85,7 @@ void thread_main(void* param)
             pthread_mutex_lock(&mutex); //due to critical section
             close(scs[p.idx]);
             scs[p.idx] = -1;
+            --cnt;
             pthread_mutex_unlock(&mutex);
             break;
         }
