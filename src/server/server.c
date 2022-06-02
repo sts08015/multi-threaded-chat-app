@@ -5,7 +5,7 @@ void sig_handle_s(int signo)
     if(signo == SIGINT) //handle SIGINT
     {
         close(ss);  //close open socket
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex); //due to critical section
         for(int i=0;i<CAPACITY;i++) if(scs[i]!=-1) close(scs[i]);
         free(scs);
         pthread_mutex_unlock(&mutex);
@@ -41,11 +41,10 @@ void conn_succ_server(struct sockaddr_in* cs_addr)
 
 void broadcast(int idx,char* str,int len)
 {
-    pthread_mutex_lock(&mutex);
-    for(int i=0;i<CAPACITY;i++)
+    pthread_mutex_lock(&mutex); //due to critical section
+    for(int i=0;i<CAPACITY;i++) //broadcast except sender
     {
         if(i==idx || scs[i]<0) continue;
-        //puts("fuck");
         send(scs[i],str,len,0);
     }
     pthread_mutex_unlock(&mutex);
@@ -53,15 +52,15 @@ void broadcast(int idx,char* str,int len)
 
 void thread_main(void* param)
 {
-    char nickname[BUFLEN] = {0};
-    char buf[BUFLEN] = {0};
+    char nickname[BUFLEN] = {0};    //buffer to store nickname
+    char buf[BUFLEN] = {0}; //
     TP p = *(TP*)param;
     conn_succ_server(&(p.cs_addr)); //print connection success string
     recv(scs[p.idx],nickname,BUFLEN,0); //receive nickname
     
     snprintf(buf,BUFLEN,"%s is connected",nickname);
     int len = strlen(buf);
-    broadcast(p.idx,buf,len);
+    broadcast(p.idx,buf,len);   //broadcast connection message of new client
     puts(buf);
     
     uint8_t flag = 1;
@@ -69,11 +68,11 @@ void thread_main(void* param)
     {
         memset(buf,0,BUFLEN);
         flag = recv_msg(scs[p.idx],buf,BUFLEN);
-        if(flag == 0)
+        if(flag == 0)   //if QUIT is received, broadcast disconnection announcement
         {
             snprintf(buf,BUFLEN,"%s is disconnected",nickname);
         }
-        else
+        else    //broadcast message as nickname: msg format 
         {
             char* tmp = strdup(buf);
             snprintf(buf,BUFLEN,"%s: %s",nickname,tmp);
@@ -81,9 +80,9 @@ void thread_main(void* param)
         }
         broadcast(p.idx,buf,strlen(buf));
         puts(buf);
-        if(flag == 0)
+        if(flag == 0)   //if QUIT is received, terminate thread
         {
-            pthread_mutex_lock(&mutex);
+            pthread_mutex_lock(&mutex); //due to critical section
             close(scs[p.idx]);
             scs[p.idx] = -1;
             pthread_mutex_unlock(&mutex);

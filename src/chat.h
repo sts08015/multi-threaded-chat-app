@@ -20,13 +20,13 @@
     close open socket when error occurs
 */
 void handleErr(int fd,const char const* msg);
+
 /*
     function to receive messages
-    client, server both use this function
 */
 int recv_msg(int fd, char* buf, int maxlen);
+
 /*
     function to transmit messages
-    client, server both use this function 
 */
 int send_msg(int fd, char* buf, int maxlen);

@@ -55,9 +55,9 @@ int main(int argc, char* argv[])
         ret = accept(ss,(struct sockaddr*) &cs_addr,&cs_addr_len);  //accept connection
         if(ret<0 || cnt>=CAPACITY) continue;
         
-        pthread_mutex_lock(&mutex);
+        pthread_mutex_lock(&mutex); //due to critical section
         cnt++;
-        for(int i=0;i<CAPACITY;i++)
+        for(int i=0;i<CAPACITY;i++) //linearly search available space 
         {
             if(scs[i]==-1)
             {
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
         pthread_mutex_unlock(&mutex);
 
         tp.cs_addr = cs_addr;
-        pthread_create(tid+tp.idx, NULL, (void*(*)(void*))thread_main, (void*)&tp);
+        pthread_create(tid+tp.idx, NULL, (void*(*)(void*))thread_main, (void*)&tp); //create thread per connected client
     }
     return 0;
 }
