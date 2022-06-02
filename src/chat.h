@@ -13,7 +13,7 @@
 #include <string.h>
 #include <pthread.h>
 
-#define MAX_BUF_LEN 200 //max buffer size during chatting
+#define MAX_BUF_LEN 222 //max buffer size during chatting
 
 /*
     function to handle error
