@@ -2,7 +2,7 @@
 
 int ss; //welcoming socket file descriptor for server
 int *scs = NULL;    //socket file descriptor array
-int cnt;    //total connected client num
+volatile int cnt;    //total connected client num
 pthread_t tid[CAPACITY];    //tid array
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;  //mutex used in server
 
@@ -51,13 +51,23 @@ int main(int argc, char* argv[])
     socklen_t cs_addr_len = sizeof(cs_addr);
     TP tp = {0};
     while(1)
-    {
-        if(cnt>=CAPACITY) continue;
+    {   
+        pthread_mutex_lock(&mutex);
+        if(cnt<CAPACITY) cnt++;
+        else
+        {
+            pthread_mutex_unlock(&mutex);
+            continue;
+        }
+        pthread_mutex_unlock(&mutex);
         ret = accept(ss,(struct sockaddr*) &cs_addr,&cs_addr_len);  //accept connection
-        if(ret<0) continue;
-        
-        pthread_mutex_lock(&mutex); //due to critical section
-        cnt++;
+        pthread_mutex_lock(&mutex);
+        if(ret<0)
+        {
+            --cnt;
+            pthread_mutex_unlock(&mutex);
+            continue;
+        }
         for(int i=0;i<CAPACITY;i++) //linearly search available space 
         {
             if(scs[i]==-1)

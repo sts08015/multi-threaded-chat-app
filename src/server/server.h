@@ -17,7 +17,7 @@ typedef struct thread_param
 
 extern pthread_mutex_t mutex; //mutex used in sever
 
-extern int cnt; //total connected client num
+extern volatile int cnt; //total connected client num
 extern int ss;  //server's welcoming socket
 extern int* scs;    //server's opened sockets
 
