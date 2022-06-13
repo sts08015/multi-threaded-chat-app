@@ -44,7 +44,7 @@ void conn_succ_server(struct sockaddr_in* cs_addr);
 /*
     function to broadcast received message to connected clients except sender
 */
-void broadcast(int idx,char* str,int len);
+void broadcast(int idx,char* str,int len,char opt);
 
 /*
     thread per connected client

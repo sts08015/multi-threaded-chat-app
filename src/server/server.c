@@ -39,12 +39,13 @@ void conn_succ_server(struct sockaddr_in* cs_addr)
     printf("Connection from %s:%hu\n",ip,port); //server connection success message
 }
 
-void broadcast(int idx,char* str,int len)
+void broadcast(int idx,char* str,int len,char opt)
 {
     pthread_mutex_lock(&mutex); //due to critical section
     for(int i=0;i<CAPACITY;i++) //broadcast except sender
     {
-        if(i==idx || scs[i]<0) continue;
+        if(scs[i] < 0) continue;
+        else if(opt == 0 && i==idx) continue;
         send(scs[i],str,len,0);
     }
     pthread_mutex_unlock(&mutex);
@@ -60,7 +61,7 @@ void thread_main(void* param)
     
     snprintf(buf,BUFLEN,"%s is connected",nickname);
     int len = strlen(buf);
-    broadcast(p.idx,buf,len);   //broadcast connection message of new client
+    broadcast(p.idx,buf,len,1);   //broadcast connection message of new client
     puts(buf);
     
     uint8_t flag = 1;
@@ -68,6 +69,7 @@ void thread_main(void* param)
     {
         memset(buf,0,BUFLEN);
         flag = recv_msg(scs[p.idx],buf,BUFLEN);
+        if(*buf==0) continue;
         if(flag == 0)   //if QUIT is received, broadcast disconnection announcement
         {
             snprintf(buf,BUFLEN,"%s is disconnected",nickname);
@@ -78,7 +80,7 @@ void thread_main(void* param)
             snprintf(buf,BUFLEN,"%s: %s",nickname,tmp);
             free(tmp);
         }
-        broadcast(p.idx,buf,strlen(buf));
+        broadcast(p.idx,buf,strlen(buf),0);
         puts(buf);
         if(flag == 0)   //if QUIT is received, terminate thread
         {
