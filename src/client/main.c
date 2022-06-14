@@ -35,7 +35,6 @@ int main(int argc, char* argv[])
         return -1;
     }
     
-    //conn_succ_client(argv[3]); //print connection success string
     chat_client(argv[3]);  //chat with server
 
     close(cs);  //close socket after chatting is over
