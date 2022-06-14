@@ -58,7 +58,16 @@ void thread_main(void* param)
     TP p = *(TP*)param;
     conn_succ_server(&(p.cs_addr)); //print connection success string
     recv(scs[p.idx],nickname,BUFLEN,0); //receive nickname
-    
+    char* ptr = strstr(nickname,"QUIT\n");
+    if(ptr!=NULL)   //QUIT\n in nickname means client closed connection before acception
+    {
+        pthread_mutex_lock(&mutex); //due to critical section
+        close(scs[p.idx]);
+        scs[p.idx] = -1;
+        --cnt;
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
     snprintf(buf,BUFLEN,"%s is connected",nickname);
     int len = strlen(buf);
     broadcast(p.idx,buf,len,1);   //broadcast connection message of new client
